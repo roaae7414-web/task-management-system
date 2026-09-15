@@ -40,7 +40,7 @@ const addTaskToUser = async (req, res) => {
 
     res.status(200).json({
       status: "success",
-      message: "Task added successfully",
+      message: "Task added successfully to your tasks",
       data: {
         myTasks: user.myTasks,
       },

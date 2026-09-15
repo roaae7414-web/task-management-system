@@ -1,6 +1,9 @@
 const User = require("../models/user");
-const bcryptjs = require("bcryptjs");
+const deleteUploadedFile = require("../utils/delete-uploaded-file");
+
 const generateToken = require("../utils/get-jwt");
+
+const bcryptjs = require("bcryptjs");
 
 const signup = async (req, res) => {
   try {
@@ -79,4 +82,7 @@ const signin = async (req, res) => {
   }
 };
 
-module.exports = { signup, signin };
+module.exports = {
+  signup,
+  signin,
+};

@@ -1,111 +1,157 @@
 const Task = require("../models/task.model");
+const deleteUploadedFile = require("../utils/delete-uploaded-file");
 
-const gettasks = async (req, res) => {
+// Get all tasks
+const getAllTasks = async (req, res) => {
   try {
     const tasks = await Task.find();
 
-    res.status(200).json(tasks);
+    res.status(200).json({
+      status: "success",
+      count: tasks.length,
+      data: {
+        tasks,
+      },
+    });
   } catch (error) {
-    res.status(500).json({
-      message: "Error getting tasks",
-      error: error.message,
+    res.status(400).json({
+      status: "error",
+      message: `Failed to fetch tasks: ${error.message}`,
     });
   }
 };
 
-const addtask = async (req, res) => {
+// Create task
+const createTask = async (req, res) => {
   try {
     const newTask = await Task.create({
-      title: req.body.title,
-      description: req.body.description,
-      status: req.body.status,
-      dueDate: req.body.dueDate,
-      imageUrl: req.file ? req.file.filename : null,
+      ...req.body,
+      imageUrl: req.file?.filename,
     });
 
-    res.status(201).json(newTask);
+    res.status(201).json({
+      status: "success",
+      message: "Task added successfully",
+      data: {
+        task: newTask,
+      },
+    });
   } catch (error) {
-    res.status(500).json({
-      message: "Error adding task",
-      error: error.message,
+    if (req.file) {
+      deleteUploadedFile("tasks", req.file.filename);
+    }
+
+    res.status(400).json({
+      status: "error",
+      message: error.message,
     });
   }
 };
+
+// Get task by ID
 const getTaskById = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
 
     if (!task) {
       return res.status(404).json({
-        message: "Task not found",
-      });
-    }
-
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({
-      message: "Error getting task",
-      error: error.message,
-    });
-  }
-};
-
-const updatetask = async (req, res) => {
-  try {
-    const task = await Task.findByIdAndUpdate(
-      req.params.id,
-      {
-        title: req.body.title,
-        description: req.body.description,
-        status: req.body.status,
-        dueDate: req.body.dueDate,
-      },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
-    }
-
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({
-      message: "Error updating task",
-      error: error.message,
-    });
-  }
-};
-
-const deletetask = async (req, res) => {
-  try {
-    const task = await Task.findByIdAndDelete(req.params.id);
-
-    if (!task) {
-      return res.status(404).json({
+        status: "fail",
         message: "Task not found",
       });
     }
 
     res.status(200).json({
-      message: "Task deleted successfully",
+      status: "success",
+      data: {
+        task,
+      },
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Error deleting task",
-      error: error.message,
+    res.status(400).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+// Update task
+const updateTask = async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+
+    if (!task) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Task not found",
+      });
+    }
+
+    if (req.file) {
+      req.body.imageUrl = req.file.filename;
+
+      if (task.imageUrl) {
+        deleteUploadedFile("tasks", task.imageUrl);
+      }
+    }
+
+    Object.assign(task, req.body);
+
+    const updatedTask = await task.save();
+
+    res.status(200).json({
+      status: "success",
+      message: "Task updated successfully",
+      data: {
+        task: updatedTask,
+      },
+    });
+  } catch (error) {
+    if (req.file) {
+      deleteUploadedFile("tasks", req.file.filename);
+    }
+
+    res.status(400).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+// Delete task
+const deleteTask = async (req, res) => {
+  try {
+    const deletedTask = await Task.findByIdAndDelete(req.params.id);
+
+    if (!deletedTask) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Task not found",
+      });
+    }
+
+    if (deletedTask.imageUrl) {
+      deleteUploadedFile("tasks", deletedTask.imageUrl);
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Task deleted successfully",
+      data: {
+        task: deletedTask,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "error",
+      message: error.message,
     });
   }
 };
 
 module.exports = {
-  gettasks,
-  addtask,
+  getAllTasks,
+  createTask,
   getTaskById,
-  updatetask,
-  deletetask,
+  updateTask,
+  deleteTask,
 };

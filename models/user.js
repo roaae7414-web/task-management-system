@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const bcryptjs = require("bcryptjs");
+const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
@@ -59,11 +59,11 @@ const userSchema = new mongoose.Schema(
       default: "default-user.webp",
     },
 
-    myCourses: {
+    myTasks: {
       type: [
         {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Course",
+          ref: "Task",
         },
       ],
       default: [],
@@ -73,9 +73,10 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
 userSchema.pre("save", async function () {
   if (this.isModified("password")) {
-    this.password = await bcryptjs.hash(this.password, 10);
+    this.password = await bcrypt.hash(this.password, 10);
   }
 });
 

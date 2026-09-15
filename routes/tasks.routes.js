@@ -1,43 +1,38 @@
 const express = require("express");
 
-const router = express.Router();
+const taskControllers = require("../controllers/tasks.controller");
 
 const multerUpload = require("../middleware/multer-middleware");
 
 const authenticateMiddleware = require("../middleware/authenticate-middleware");
+
 const authorizeMiddleware = require("../middleware/authorize-middleware");
 
-const {
-  gettasks,
-  addtask,
-  getTaskById,
-  updatetask,
-  deletetask,
-} = require("../controllers/tasks.controller");
+const router = express.Router();
 
 router
-  .route("/tasks")
-  .get(gettasks)
+  .route("/")
+  .get(taskControllers.getAllTasks)
   .post(
     authenticateMiddleware,
     authorizeMiddleware("admin"),
     multerUpload.single("imageUrl"),
-    addtask
+    taskControllers.createTask,
   );
 
 router
-  .route("/tasks/:id")
-  .get(getTaskById)
-  .put(
+  .route("/:id")
+  .get(taskControllers.getTaskById)
+  .patch(
     authenticateMiddleware,
     authorizeMiddleware("admin"),
     multerUpload.single("imageUrl"),
-    updatetask
+    taskControllers.updateTask,
   )
   .delete(
     authenticateMiddleware,
     authorizeMiddleware("admin"),
-    deletetask
+    taskControllers.deleteTask,
   );
 
 module.exports = router;

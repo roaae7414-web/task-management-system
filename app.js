@@ -1,29 +1,41 @@
-require("dotenv").config();
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const express = require("express");
-const mongoose = require("mongoose");
+const path = require("path");
+const cors = require("cors");
 
-const tasksRouter = require("./routes/tasks.routes");
+require("dotenv").config();
+
+const dbConnect = require("./config/db-connect");
+
+const taskRouter = require("./routes/tasks.routes");
 const authRouter = require("./routes/auth-routes");
 const userRouter = require("./routes/user-routes");
 
+dbConnect();
+
 const app = express();
+
+app.use(
+  cors({
+    origin: "http://localhost:4200",
+  })
+);
 
 app.use(express.json());
 
-app.use(tasksRouter);
+app.use(
+  "/api/v1/uploads",
+  express.static(path.join(__dirname, "uploads"))
+);
+
+app.use("/api/v1/tasks", taskRouter);
+
 app.use("/api/v1/auth", authRouter);
+
 app.use("/api/v1/users", userRouter);
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB Connected Successfully");
-
-    app.listen(3000, () => {
-      console.log("Server running on port 3000");
-    });
-  })
-  .catch((error) => {
-    console.log("Database Connection Error:", error.message);
-  });
+app.listen(process.env.PORT, () => {
+  console.log(`Server listening on port ${process.env.PORT}`);
+});

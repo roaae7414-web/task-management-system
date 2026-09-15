@@ -7,6 +7,11 @@ const diskStorage = multer.diskStorage({
 
     if (req.baseUrl.includes("tasks")) {
       dest = "uploads/tasks";
+    } else if (
+      req.baseUrl.includes("users") ||
+      req.baseUrl.includes("auth")
+    ) {
+      dest = "uploads/users";
     }
 
     try {
@@ -18,8 +23,17 @@ const diskStorage = multer.diskStorage({
   },
 
   filename: function (req, file, cb) {
-    const fileType = file.mimetype.split("/")[1];
-    let fileName = `task-${Date.now()}.${fileType}`;
+    let fileName = file.originalname;
+    let fileType = file.mimetype.split("/")[1];
+
+    if (req.baseUrl.includes("tasks")) {
+      fileName = `task-${Date.now()}.${fileType}`;
+    } else if (
+      req.baseUrl.includes("users") ||
+      req.baseUrl.includes("auth")
+    ) {
+      fileName = `user-${Date.now()}.${fileType}`;
+    }
 
     cb(null, fileName);
   },
